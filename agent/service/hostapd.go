@@ -27,6 +27,7 @@ import (
 )
 
 const (
+	ctrlInterfaceConfigTemplate = `ctrl_interface=%s`
 	commonConfigTemplate = `
 interface=%s
 # Driver; nl80211 is used with all Linux mac80211 drivers.
@@ -108,6 +109,11 @@ func hostapdConfigFile(radioConfig *ocstruct.WifiOffice_OfficeAp_Radios_Radio_Co
 	// Generate common configuration.
 	radioHWMode := hostapdHardwareMode(radioConfig.OperatingFrequency)
 	commonConfig := fmt.Sprintf(commonConfigTemplate, wlanINTFName, radioHWMode, *radioConfig.Channel)
+
+	if ctrlInterface != nill {
+		commonConfig += fmt.Sprintf(ctrlInterfaceConfigTemplate, *radioConfig.CtrlInterface)
+	}
+
 	hostapdConfig += commonConfig
 
 	// Generate wlan configuration.
