@@ -65,6 +65,7 @@ nas_identifier=%s
 func configHostapd(apConfig *ocstruct.WifiOffice_OfficeAp, wlanINTFName string) error {
 	hostname := *apConfig.Hostname
 	apRadios := apConfig.Radios
+	ctrlInterface := apConfig.VendorConfig['ctrl-interface']
 	if apRadios == nil || len(apRadios.Radio) == 0 {
 		log.Error("No radio configuration found.")
 		return errors.New("no radio configuration found")
@@ -79,7 +80,6 @@ func configHostapd(apConfig *ocstruct.WifiOffice_OfficeAp, wlanINTFName string) 
 	for _, apRadio := range apRadios.Radio {
 		radioConfig := apRadio.Config
 		wlanConfigs := wlanWithOpFreq(apConfig, radioConfig.OperatingFrequency)
-		ctrlInterface := apConfig.VendorConfig['ctrl-interface']
 		// Genearte hostapd configuration.
 		hostapdConfig := hostapdConfigFile(radioConfig, authServerConfigs, wlanConfigs, wlanINTFName, hostname, ctrlInterface)
 
