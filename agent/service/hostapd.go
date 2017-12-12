@@ -110,8 +110,12 @@ func hostapdConfigFile(radioConfig *ocstruct.WifiOffice_OfficeAp_Radios_Radio_Co
 	radioHWMode := hostapdHardwareMode(radioConfig.OperatingFrequency)
 	commonConfig := fmt.Sprintf(commonConfigTemplate, wlanINTFName, radioHWMode, *radioConfig.Channel)
 
-	if ctrlInterface != nill {
+	if ctrlInterface != nil {
+		log.Infof("ctrlInterface was not nill")
 		commonConfig += fmt.Sprintf(ctrlInterfaceConfigTemplate, ctrlInterface)
+	}
+	else {
+		log.Infof("ctrlInterface was nill")
 	}
 
 	hostapdConfig += commonConfig
