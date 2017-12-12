@@ -79,9 +79,9 @@ func configHostapd(apConfig *ocstruct.WifiOffice_OfficeAp, wlanINTFName string) 
 	for _, apRadio := range apRadios.Radio {
 		radioConfig := apRadio.Config
 		wlanConfigs := wlanWithOpFreq(apConfig, radioConfig.OperatingFrequency)
-
+		ctrlInterface := apConfig.VendorConfig['ctrl-interface']
 		// Genearte hostapd configuration.
-		hostapdConfig := hostapdConfigFile(radioConfig, authServerConfigs, wlanConfigs, wlanINTFName, hostname)
+		hostapdConfig := hostapdConfigFile(radioConfig, authServerConfigs, wlanConfigs, wlanINTFName, hostname, ctrlInterface)
 
 		// Save the hostapd configuration file.
 		configFileName := hostapdConfFileName(wlanINTFName)
@@ -102,7 +102,7 @@ func configHostapd(apConfig *ocstruct.WifiOffice_OfficeAp, wlanINTFName string) 
 func hostapdConfigFile(radioConfig *ocstruct.WifiOffice_OfficeAp_Radios_Radio_Config,
 	authServerConfigs map[string]*ocstruct.WifiOffice_OfficeAp_System_Aaa_ServerGroups_ServerGroup_Servers_Server,
 	wlanConfigs []*ocstruct.WifiOffice_OfficeAp_Ssids_Ssid_Config,
-	wlanINTFName string, hostname string) string {
+	wlanINTFName string, hostname string, ctrlInterface string) string {
 	log.Infof("Generating hostapd configuration for radio %v...", *radioConfig.Id)
 	hostapdConfig := ""
 
@@ -111,7 +111,7 @@ func hostapdConfigFile(radioConfig *ocstruct.WifiOffice_OfficeAp_Radios_Radio_Co
 	commonConfig := fmt.Sprintf(commonConfigTemplate, wlanINTFName, radioHWMode, *radioConfig.Channel)
 
 	if ctrlInterface != nill {
-		commonConfig += fmt.Sprintf(ctrlInterfaceConfigTemplate, *radioConfig.CtrlInterface)
+		commonConfig += fmt.Sprintf(ctrlInterfaceConfigTemplate, ctrlInterface)
 	}
 
 	hostapdConfig += commonConfig
