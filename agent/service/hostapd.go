@@ -1,4 +1,4 @@
-/* Copyright 2017 Google Inc.
+/* Copyright 2019 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,7 +27,10 @@ import (
 )
 
 const (
-	ctrlInterfaceConfigTemplate = `ctrl_interface=%s`
+	ctrlInterfaceConfigTemplate = `ctrl_interface=%s
+`
+	radiusAttributeSaveConfigTemplate = `radius_auth_access_accept_attr=%s
+`
 	commonConfigTemplate = `
 interface=%s
 # Driver; nl80211 is used with all Linux mac80211 drivers.
@@ -65,7 +68,8 @@ nas_identifier=%s
 func configHostapd(apConfig *ocstruct.WifiOffice_OfficeAp, wlanINTFName string) error {
 	hostname := *apConfig.Hostname
 	apRadios := apConfig.Radios
-	ctrlInterface := apConfig.VendorConfig['ctrl-interface']
+	ctrlInterface := *apConfig.VendorConfig["ctrl-interface"].ConfigValue
+	radiusAttribute := *apConfig.VendorConfig["radius_auth_access_accept_attr"].ConfigValue
 	if apRadios == nil || len(apRadios.Radio) == 0 {
 		log.Error("No radio configuration found.")
 		return errors.New("no radio configuration found")
@@ -81,7 +85,7 @@ func configHostapd(apConfig *ocstruct.WifiOffice_OfficeAp, wlanINTFName string) 
 		radioConfig := apRadio.Config
 		wlanConfigs := wlanWithOpFreq(apConfig, radioConfig.OperatingFrequency)
 		// Genearte hostapd configuration.
-		hostapdConfig := hostapdConfigFile(radioConfig, authServerConfigs, wlanConfigs, wlanINTFName, hostname, ctrlInterface)
+		hostapdConfig := hostapdConfigFile(radioConfig, authServerConfigs, wlanConfigs, wlanINTFName, hostname, ctrlInterface, radiusAttribute)
 
 		// Save the hostapd configuration file.
 		configFileName := hostapdConfFileName(wlanINTFName)
@@ -102,7 +106,7 @@ func configHostapd(apConfig *ocstruct.WifiOffice_OfficeAp, wlanINTFName string) 
 func hostapdConfigFile(radioConfig *ocstruct.WifiOffice_OfficeAp_Radios_Radio_Config,
 	authServerConfigs map[string]*ocstruct.WifiOffice_OfficeAp_System_Aaa_ServerGroups_ServerGroup_Servers_Server,
 	wlanConfigs []*ocstruct.WifiOffice_OfficeAp_Ssids_Ssid_Config,
-	wlanINTFName string, hostname string, ctrlInterface string) string {
+	wlanINTFName string, hostname string, ctrlInterface string, radiusAttribute string) string {
 	log.Infof("Generating hostapd configuration for radio %v...", *radioConfig.Id)
 	hostapdConfig := ""
 
@@ -110,12 +114,11 @@ func hostapdConfigFile(radioConfig *ocstruct.WifiOffice_OfficeAp_Radios_Radio_Co
 	radioHWMode := hostapdHardwareMode(radioConfig.OperatingFrequency)
 	commonConfig := fmt.Sprintf(commonConfigTemplate, wlanINTFName, radioHWMode, *radioConfig.Channel)
 
-	if ctrlInterface != nil {
-		log.Infof("ctrlInterface was not nill")
+	if len(ctrlInterface) != 0 {
 		commonConfig += fmt.Sprintf(ctrlInterfaceConfigTemplate, ctrlInterface)
 	}
-	else {
-		log.Infof("ctrlInterface was nill")
+	if len(radiusAttribute) != 0 {
+		commonConfig += fmt.Sprintf(radiusAttributeSaveConfigTemplate, radiusAttribute)
 	}
 
 	hostapdConfig += commonConfig
